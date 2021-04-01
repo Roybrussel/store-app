@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import { saveShippingAddress } from "./services/shippingService";
 
 const STATUS = {
@@ -7,7 +7,7 @@ const STATUS = {
   SUBMITTED: "SUBMITTED",
   SUBMITTING: "SUBMITTING",
   COMPLETED: "COMPLETED",
-}
+};
 
 // Declaring outside component to avoid recreation on each render
 const emptyAddress = {
@@ -19,35 +19,38 @@ export default function Checkout({ cart, emptyCart }) {
   const [address, setAddress] = useState(emptyAddress);
   const [status, setStatus] = useState(STATUS.IDLE);
   const [saveError, setSaveError] = useState(null);
+  const [touched, setTouched] = useState({});
 
-  // DERIVED STATE
+  // Derived state
   const errors = getErrors(address);
   const isValid = Object.keys(errors).length === 0;
 
   function handleChange(e) {
-    e.persist();
+    e.persist(); // persist the event
     setAddress((curAddress) => {
       return {
         ...curAddress,
         [e.target.id]: e.target.value,
-      }
-    })
+      };
+    });
   }
 
   function handleBlur(event) {
-    // TODO
+    event.persist();
+    setTouched((cur) => {
+      return { ...cur, [event.target.id]: true };
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setStatus(STATUS.SUBMITTING);
     if (isValid) {
-    try {
-      await saveShippingAddress(address);
-      emptyCart();
-      setStatus(STATUS.COMPLETED);
-    }
-        catch (e) {
+      try {
+        await saveShippingAddress(address);
+        emptyCart();
+        setStatus(STATUS.COMPLETED);
+      } catch (e) {
         setSaveError(e);
       }
     } else {
@@ -64,7 +67,7 @@ export default function Checkout({ cart, emptyCart }) {
 
   if (saveError) throw saveError;
   if (status === STATUS.COMPLETED) {
-    return <h1>Thanks for shopping!</h1>
+    return <h1>Thanks for shopping!</h1>;
   }
 
   return (
@@ -91,6 +94,9 @@ export default function Checkout({ cart, emptyCart }) {
             onBlur={handleBlur}
             onChange={handleChange}
           />
+          <p role="alert">
+            {(touched.city || status === STATUS.SUBMITTED) && errors.city}
+          </p>
         </div>
 
         <div>
@@ -108,6 +114,10 @@ export default function Checkout({ cart, emptyCart }) {
             <option value="United Kingdom">United Kingdom</option>
             <option value="USA">USA</option>
           </select>
+
+          <p role="alert">
+            {(touched.country || status === STATUS.SUBMITTED) && errors.country}
+          </p>
         </div>
 
         <div>
