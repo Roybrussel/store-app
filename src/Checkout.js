@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+import { saveShippingAddress } from "./services/shippingService";
+
 const STATUS = {
   IDLE: "IDLE",
   SUBMITTED: "SUBMITTED",
@@ -13,9 +15,10 @@ const emptyAddress = {
   country: "",
 };
 
-export default function Checkout({ cart }) {
+export default function Checkout({ cart, emptyCart }) {
   const [address, setAddress] = useState(emptyAddress);
   const [status, setStatus] = useState(STATUS.IDLE);
+  const [saveError, setSaveError] = useState(null);
   function handleChange(e) {
     e.persist();
     setAddress((curAddress) => {
@@ -33,6 +36,18 @@ export default function Checkout({ cart }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setStatus(STATUS.SUBMITTING);
+    try {
+      await saveShippingAddress(address);
+      emptyCart();
+      setStatus(STATUS.COMPLETED);
+    } catch (e) {
+      setSaveError(e);
+    }
+  }
+
+  if (saveError) throw saveError;
+  if (status === STATUS.COMPLETED) {
+    return <h1>Thanks for shopping!</h1>
   }
 
   return (
@@ -48,6 +63,7 @@ export default function Checkout({ cart }) {
             value={address.city}
             onBlur={handleBlur}
             onChange={handleChange}
+            required
           />
         </div>
 
@@ -59,6 +75,7 @@ export default function Checkout({ cart }) {
             value={address.country}
             onBlur={handleBlur}
             onChange={handleChange}
+            required
           >
             <option value="">Select Country</option>
             <option value="China">China</option>
