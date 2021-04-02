@@ -1,6 +1,6 @@
 {
-  "homepage": "http://roybrussel.github.io/store-app",
   "name": "react-state-building-script",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
